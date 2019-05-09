@@ -1039,7 +1039,7 @@ def create_discriminator_loss(disc_real_output, disc_fake_output):
     disc_fake_loss = tf.reduce_mean(ls_loss_fake, name='disc_fake_loss')
 
 
-    return disc_real_loss, disc_fake_loss
+    return tf.add(disc_real_loss, disc_fake_loss)
 
 def create_optimizers(gene_loss, gene_var_list,
                       disc_loss, disc_var_list):    
