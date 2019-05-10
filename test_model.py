@@ -3,6 +3,15 @@ import numpy as np
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
+batch_size = 100
+gene_l1l2_factor = 0.5
+gene_ssim_factor = 0.3
+gene_log_factor = 0.5
+gene_dc_factor = 0.5
+
+
+
+
 
 class Model:
     """A neural network model.
@@ -182,7 +191,7 @@ class Model:
             weight = tf.get_variable('weight', initializer=initw)
             weight = tf.transpose(weight, perm=[0, 1, 3, 2])
             prev_output = self.get_output()
-            output_shape = [FLAGS.batch_size,
+            output_shape = [batch_size,
                             int(prev_output.get_shape()[1]) * stride,
                             int(prev_output.get_shape()[2]) * stride,
                             num_units]
@@ -665,7 +674,7 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
     if num_dc_layers >= 0:
         # parameters
         threshold_zero = 1./255.
-        mix_DC = 0.9 #0.95 #1
+        mix_DC = 0.8 #0.95 #1
 
         # sampled kspace
         first_layer = features
@@ -700,8 +709,8 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
             #print('corrected_complex', corrected_complex.get_shape())
  
             #get real and imaginary parts
-            corrected_real = tf.reshape(tf.real(corrected_complex), [FLAGS.batch_size, 28, 28, 1])
-            corrected_imag = tf.reshape(tf.imag(corrected_complex), [FLAGS.batch_size, 28, 28, 1])
+            corrected_real = tf.reshape(tf.real(corrected_complex), [batch_size, 28, 28, 1])
+            corrected_imag = tf.reshape(tf.imag(corrected_complex), [batch_size, 28, 28, 1])
            
             #print('size_corrected_real', corrected_real.get_shape())
 
@@ -748,7 +757,7 @@ def create_model(sess, features, labels, masks, architecture='var'):
 
     #print('channels', features.get_shape())
 
-    gene_minput = tf.placeholder(tf.float32, shape=[FLAGS.batch_size, rows, cols, channels])
+    gene_minput = tf.placeholder(tf.float32, shape=[batch_size, rows, cols, channels])
 
     # TBD: Is there a better way to instance the generator?
     if architecture == 'aec':
@@ -802,20 +811,20 @@ def create_model(sess, features, labels, masks, architecture='var'):
         gene_output_10, _ , gene_layers_10 = function_generator(sess, gene_output_9, labels, masks, 2)
         scope.reuse_variables()
 
-        #gene_output_11, _ , gene_layers_11 = function_generator(sess, gene_output_10, labels, masks, 1)
-        #scope.reuse_variables()
+        gene_output_11, _ , gene_layers_11 = function_generator(sess, gene_output_10, labels, masks, 2)
+        scope.reuse_variables()
 
-        #gene_output_12, _ , gene_layers_12 = function_generator(sess, gene_output_11, labels, masks, 1)
-        #scope.reuse_variables()
+        gene_output_12, _ , gene_layers_12 = function_generator(sess, gene_output_11, labels, masks, 2)
+        scope.reuse_variables()
 
-        #gene_output_13, _ , gene_layers_13 = function_generator(sess, gene_output_12, labels, masks, 1)
-        #scope.reuse_variables()
+        gene_output_13, _ , gene_layers_13 = function_generator(sess, gene_output_12, labels, masks, 2)
+        scope.reuse_variables()
 
-        #gene_output_14, _ , gene_layers_14 = function_generator(sess, gene_output_13, labels, masks, 1)
-        #scope.reuse_variables()
+        gene_output_14, _ , gene_layers_14 = function_generator(sess, gene_output_13, labels, masks, 2)
+        scope.reuse_variables()
 
-        #gene_output_15, _ , gene_layers_15 = function_generator(sess, gene_output_14, labels, masks, 1)
-        #scope.reuse_variables()
+        gene_output_15, _ , gene_layers_15 = function_generator(sess, gene_output_14, labels, masks, 2)
+        scope.reuse_variables()
 
         #gene_output_16, _ , gene_layers_16 = function_generator(sess, gene_output_15, labels, masks, 1)
         #scope.reuse_variables()
@@ -833,12 +842,12 @@ def create_model(sess, features, labels, masks, architecture='var'):
         #scope.reuse_variables()
 
 
-        gene_output_real = gene_output_10
+        gene_output_real = gene_output_15
         gene_output_complex = tf.complex(gene_output_real[:,:,:,0], gene_output_real[:,:,:,1])
         gene_output = tf.abs(gene_output_complex)
         #print('gene_output_train', gene_output.get_shape()) 
-        gene_output = tf.reshape(gene_output, [FLAGS.batch_size, rows, cols, 1])
-        gene_layers = gene_layers_10               
+        gene_output = tf.reshape(gene_output, [batch_size, rows, cols, 1])
+        gene_layers = gene_layers_15               
 
     # Discriminator with real data
     disc_real_input = tf.identity(labels, name='disc_real_input')
@@ -848,10 +857,10 @@ def create_model(sess, features, labels, masks, architecture='var'):
     
         #print('hybrid_disc', FLAGS.hybrid_disc)
         disc_real_output, disc_var_list, disc_layers = \
-                _discriminator_model(sess, disc_real_input, hybrid_disc=FLAGS.hybrid_disc)
+                _discriminator_model(sess, disc_real_input)
 
         scope.reuse_variables()
-        disc_fake_output, _, _ = _discriminator_model(sess, gene_output, hybrid_disc=FLAGS.hybrid_disc)
+        disc_fake_output, _, _ = _discriminator_model(sess, gene_output)
 
     
         #test
@@ -920,13 +929,13 @@ def keras_mean(x, axis=None, keepdims=False):
         x = tf.cast(x, floatx())
     return tf.reduce_mean(x, reduction_indices=axis, keep_dims=keepdims)
 
-def loss_DSSIS_tf11(y_true, y_pred, patch_size=5, batch_size=-1):
+def loss_DSSIS_tf11(y_true, y_pred, patch_size=5, batchsize=-1):
     # get batch size
-    if batch_size<0:
-        batch_size = int(y_true.get_shape()[0])
+    if batchsize<0:
+        batchsize = int(y_true.get_shape()[0])
     else:
-        y_true = tf.reshape(y_true, [batch_size] + get_shape(y_pred)[1:])
-        y_pred = tf.reshape(y_pred, [batch_size] + get_shape(y_pred)[1:])
+        y_true = tf.reshape(y_true, [batchsize] + y_true.get_shape()[1:])
+        y_pred = tf.reshape(y_pred, [batchsize] + y_pred.get_shape()[1:])
     # batch, x, y, channel
     # y_true = tf.transpose(y_true, [0, 2, 3, 1])
     # y_pred = tf.transpose(y_pred, [0, 2, 3, 1])
@@ -986,21 +995,21 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
     # mse loss
     gene_l1_loss  = tf.reduce_mean(tf.abs(gene_output - labels), name='gene_l1_loss')
     gene_l2_loss  = tf.reduce_mean(tf.square(gene_output - labels), name='gene_l2_loss')
-    gene_mse_loss = tf.add(FLAGS.gene_l1l2_factor * gene_l1_loss, 
-                        (1.0 - FLAGS.gene_l1l2_factor) * gene_l2_loss, name='gene_mse_loss')
+    gene_mse_loss = tf.add(gene_l1l2_factor * gene_l1_loss, 
+                        (1.0 - gene_l1l2_factor) * gene_l2_loss, name='gene_mse_loss')
 
     #ssim loss
     gene_ssim_loss = loss_DSSIS_tf11(labels, gene_output)
-    gene_mixmse_loss = tf.add(FLAGS.gene_ssim_factor * gene_ssim_loss, 
-                            (1.0 - FLAGS.gene_ssim_factor) * gene_mse_loss, name='gene_mixmse_loss')
+    gene_mixmse_loss = tf.add(gene_ssim_factor * gene_ssim_loss, 
+                            (1.0 - gene_ssim_factor) * gene_mse_loss, name='gene_mixmse_loss')
     
     # generator fool descriminator loss: gan LS or log loss
-    gene_fool_loss = tf.add((1.0 - FLAGS.gene_log_factor) * gene_ls_loss,
-                           FLAGS.gene_log_factor * gene_ce_loss, name='gene_fool_loss')
+    gene_fool_loss = tf.add((1.0 - gene_log_factor) * gene_ls_loss,
+                           gene_log_factor * gene_ce_loss, name='gene_fool_loss')
 
     # non-mse loss = fool-loss + data consisntency loss
-    gene_non_mse_l2     = tf.add((1.0 - FLAGS.gene_dc_factor) * gene_fool_loss,
-                           FLAGS.gene_dc_factor * gene_dc_loss, name='gene_nonmse_l2')
+    gene_non_mse_l2     = tf.add((1.0 - gene_dc_factor) * gene_fool_loss,
+                           gene_dc_factor * gene_dc_loss, name='gene_nonmse_l2')
     
     
     gene_mse_factor  = tf.placeholder(dtype=tf.float32, name='gene_mse_factor')
