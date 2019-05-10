@@ -1022,8 +1022,8 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
                             #FLAGS.gene_mse_factor * gene_mixmse_loss, name='gene_loss')
     
     #gene_mse_factor as a parameter
-    gene_loss     = tf.add((1.0 - gene_mse_factor) * gene_non_mse_l2,
-                                  gene_mse_factor * gene_mixmse_loss, name='gene_loss')
+    gene_loss     = tf.add((1.0 - 0.5) * gene_non_mse_l2,
+                                  0.5 * gene_mixmse_loss, name='gene_loss')
 
 
 
