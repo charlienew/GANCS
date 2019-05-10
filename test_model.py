@@ -9,6 +9,7 @@ gene_l1l2_factor = 0.5
 gene_ssim_factor = 0.3
 gene_log_factor = 0.5
 gene_dc_factor = 0.5
+gene_mse_factor = 0.5
 
 
 
