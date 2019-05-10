@@ -747,7 +747,7 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
 
     return model.get_output(), gene_vars, output_layers
 
-def create_model(sess, features, labels, masks, architecture='var'):
+def create_model(sess, features, labels, masks):
     # sess: TF sesson
     # features: input, for SR/CS it is the input image
     # labels: output, for SR/CS it is the groundtruth image
@@ -759,24 +759,9 @@ def create_model(sess, features, labels, masks, architecture='var'):
 
     #print('channels', features.get_shape())
 
-    gene_minput = tf.placeholder(tf.float32, shape=[batch_size, rows, cols, channels])
-
     # TBD: Is there a better way to instance the generator?
-    if architecture == 'aec':
-        function_generator = lambda x,y,z,w: _generator_encoder_decoder(x,y,z,w)
-    elif architecture == 'pool':
-        function_generator = lambda x,y,z,w: _generator_model_with_pool(x,y,z,w)
-    elif architecture.startswith('var'):
-        num_dc_layers = 1
-        if architecture!='var':
-            try:
-                num_dc_layers = int(architecture.split('var')[-1])
-            except:
-                pass
-        function_generator = lambda x,y,z,m,w: _generator_model_with_scale(x,y,z,m,w,
-                                                num_dc_layers=num_dc_layers, layer_output_skip=7)
-    else:
-        function_generator = lambda x,y,z,m,w: _generator_model_with_scale(x,y,z,m,w,
+   
+    function_generator = lambda x,y,z,m,w: _generator_model_with_scale(x,y,z,m,w,
                                                 num_dc_layers=1, layer_output_skip=7)
 
 
