@@ -1,6 +1,7 @@
 
 import numpy as np
 import tensorflow as tf
+import math
 
 FLAGS = tf.app.flags.FLAGS
 batch_size = 100
@@ -1053,14 +1054,13 @@ def create_discriminator_loss(disc_real_output, disc_fake_output):
 def create_optimizers(gene_loss, gene_var_list,
                       disc_loss, disc_var_list):    
     # TBD: Does this global step variable need to be manually incremented? I think so.
-    global_step    = tf.Variable(0, dtype=tf.int64,   trainable=False, name='global_step')
+    global_step    = tf.Variable(0, dtype=tf.int64, trainable=False,   name='global_step')
     learning_rate  = tf.placeholder(dtype=tf.float32, name='learning_rate')
-    
-    gene_opti = tf.train.AdamOptimizer(learning_rate=learning_rate,
-                                       beta1=FLAGS.learning_beta1,
+    lr = learing_rate + tf.train.exponential_decay(0.003, global_step, 2000, 1/math.e)
+
+    gene_opti = tf.train.AdamOptimizer(learning_rate=lr,
                                        name='gene_optimizer')
-    disc_opti = tf.train.AdamOptimizer(learning_rate=learning_rate,
-                                       beta1=FLAGS.learning_beta1,
+    disc_opti = tf.train.AdamOptimizer(learning_rate=lr,
                                        name='disc_optimizer')
 
     gene_minimize = gene_opti.minimize(gene_loss, var_list=gene_var_list, name='gene_loss_minimize', global_step=global_step)
