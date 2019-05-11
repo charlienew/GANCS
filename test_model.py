@@ -6,9 +6,9 @@ import math
 FLAGS = tf.app.flags.FLAGS
 batch_size = 100
 gene_l1l2_factor = 0.5
-gene_ssim_factor = 0.3
+gene_ssim_factor = 0.2
 gene_log_factor = 0.5
-gene_dc_factor = 0.5
+gene_dc_factor = 0.3
 gene_mse_factor = 0.5
 
 
@@ -676,7 +676,7 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
     if num_dc_layers >= 0:
         # parameters
         threshold_zero = 1./255.
-        mix_DC = 0.8 #0.95 #1
+        mix_DC = 0.7 #0.95 #1
 
         # sampled kspace
         first_layer = features
@@ -1007,8 +1007,8 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
                             #FLAGS.gene_mse_factor * gene_mixmse_loss, name='gene_loss')
     
     #gene_mse_factor as a parameter
-    gene_loss     = tf.add((1.0 - 0.5) * gene_non_mse_l2,
-                                  0.5 * gene_mixmse_loss, name='gene_loss')
+    gene_loss     = tf.add((1.0 - 0.4) * gene_non_mse_l2,
+                                  0.4 * gene_mixmse_loss, name='gene_loss')
 
 
 
