@@ -762,9 +762,11 @@ def create_model(features, labels, masks):
 
     # TBD: Is there a better way to instance the generator?
     tmp = tf.identity(features)
+    gene_output_list = []
     gene_model, gene_var_list, gene_layers = _generator_model_with_scale(tmp, labels, masks)
     for i in range(30):
         tmp = gene_model.get_output()
+        gene_output_list.append(tmp)
 
     gene_output_real = tmp
     gene_output_complex = tf.complex(gene_output_real[:,:,:,0], gene_output_real[:,:,:,1])
@@ -790,7 +792,7 @@ def create_model(features, labels, masks):
 
 
 
-    return [gene_output, gene_output_complex, gene_var_list, gene_layers, 
+    return [gene_output, gene_output_complex, gene_output_list, gene_var_list, gene_layers, 
             disc_real_output, disc_fake_output, disc_var_list, disc_layers]    
 
 
@@ -879,7 +881,7 @@ def loss_DSSIS_tf11(y_true, y_pred, patch_size=5, batchsize=-1):
     # ssim = tf.select(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
     return tf.reduce_mean(((1.0 - ssim) / 2), name='ssim_loss')
 
-def create_generator_loss(disc_output, gene_output, gene_output_complex,  features, labels, masks):
+def create_generator_loss(disc_output, gene_output, gene_output_complex,  gene_output_list, features, labels, masks):
     # I.e. did we fool the discriminator?
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_output, labels=tf.ones_like(disc_output))
     gene_ce_loss  = tf.reduce_mean(cross_entropy, name='gene_ce_loss')
@@ -894,15 +896,24 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
     # downscaled = _downscale(gene_output, K)
 
     # fourier_transform
-    gene_kspace = Fourier(gene_output_complex, separate_complex=False)
     feature_kspace = Fourier(features, separate_complex=True)
+    feature_mask = masks 
+    dc_loss_list = []
+    for i in range(30):
+        gene_kspace = Fourier(gene_output_list[i] separate_complex=True)
+        loss_kspace = tf.cast(tf.abs(tf.square(gene_kspace - feature_kspace)),tf.float32)*tf.cast(feature_mask,tf.float32)
+        dc_loss  = tf.reduce_mean(loss_kspace, name='gene_dc_loss')
+        dc_loss_list.append(dc_loss)
+
+    
+    
     
     # mask to get affine projection error
-    threshold_zero = 1./255.
-    feature_mask = masks #tf.greater(tf.abs(feature_kspace),threshold_zero)
+    
+    #tf.greater(tf.abs(feature_kspace),threshold_zero)
     #print('mask shape , get_shape():', feature_mask.get_shape())
 
-    loss_kspace = tf.cast(tf.abs(tf.square(gene_kspace - feature_kspace)),tf.float32)*tf.cast(feature_mask,tf.float32)
+    
     #print('loss_kspace shape , get_shape():', loss_kspace.get_shape())
 
 
@@ -910,7 +921,7 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
     #print('real output , get_shape():', labels.get_shape())
         
     # data consistency
-    gene_dc_loss  = tf.reduce_mean(loss_kspace, name='gene_dc_loss')
+    gene_dc_loss  = tf.reduce_mean(dc_loss_list, name='gene_dc_loss')
     
     # mse loss
     gene_l1_loss  = tf.reduce_mean(tf.abs(gene_output - labels), name='gene_l1_loss')
