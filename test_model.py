@@ -698,7 +698,7 @@ def _generator_model_with_scale(features, labels, masks, channels=2, layer_outpu
             # get output and input
             last_layer = model.outputs[-1]                               
             # compute kspace
-            gene_kspace = Fourier(last_layer, separate_complex=False)                
+            gene_kspace = Fourier(last_layer, separate_complex=True)                
             # affine projection
             corrected_kspace =  projected_kspace + gene_kspace * (1.0 - mask_kspace)
 
