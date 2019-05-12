@@ -975,7 +975,7 @@ def create_optimizers(gene_loss, gene_var_list,
     # TBD: Does this global step variable need to be manually incremented? I think so.
     global_step    = tf.Variable(0, dtype=tf.int64, trainable=False,   name='global_step')
     learning_rate  = tf.placeholder(dtype=tf.float32, name='learning_rate')
-    lr = learning_rate + tf.train.exponential_decay(0.003, global_step, 100, 1/math.e)
+    lr =  tf.train.exponential_decay(learning_rate, global_step, 100, 1/math.e, staircase = True)
 
     gene_opti = tf.train.AdamOptimizer(learning_rate=lr,
                                        name='gene_optimizer')
