@@ -762,7 +762,7 @@ def create_model(features, labels, masks):
 
     # TBD: Is there a better way to instance the generator?
     tmp = tf.identity(features)
-    gene_model, gene_vars_list, gene_layers = _generator_model_with_scale(tmp, labels, masks)
+    gene_model, gene_var_list, gene_layers = _generator_model_with_scale(tmp, labels, masks)
     for i in range(15):
         tmp = gene_model.get_output()
 
@@ -775,7 +775,7 @@ def create_model(features, labels, masks):
     # Discriminator with real data
     disc_input = tf.identity(labels)
     
-    disc_model, disc_vars_list, disc_layers = _discriminator_model(disc_input)
+    disc_model, disc_var_list, disc_layers = _discriminator_model(disc_input)
     disc_real_output = disc_model.get_output()
 
     disc_input = tf.identity(gene_output)
