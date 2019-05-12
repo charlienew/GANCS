@@ -763,7 +763,7 @@ def create_model(features, labels, masks):
     # TBD: Is there a better way to instance the generator?
     tmp = tf.identity(features)
     gene_model, gene_var_list, gene_layers = _generator_model_with_scale(tmp, labels, masks)
-    for i in range(15):
+    for i in range(30):
         tmp = gene_model.get_output()
 
     gene_output_real = tmp
