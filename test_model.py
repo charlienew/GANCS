@@ -228,6 +228,7 @@ class Model:
             self.add_conv2d(num_units, mapsize=mapsize, stride=1, stddev_factor=stddev_factor)
 
         self.add_sum(bypass)
+        self.add_relu()
 
         return self
 
@@ -368,7 +369,7 @@ class Model:
         scope = self._get_layer_str(layer)
         return tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope)
 
-def _discriminator_model(sess, disc_input, layer_output_skip=5, hybrid_disc=0):
+def _discriminator_model(disc_input, layer_output_skip=5, hybrid_disc=0):
 
     # update 05092017, hybrid_disc consider whether to use hybrid space for discriminator
     # to study the kspace distribution/smoothness properties
@@ -413,7 +414,7 @@ def _discriminator_model(sess, disc_input, layer_output_skip=5, hybrid_disc=0):
     #select output
     output_layers = [model.outputs[0]] + model.outputs[1:-1][::layer_output_skip] + [model.outputs[-1]]
 
-    return model.get_output(), disc_vars, output_layers
+    return model, disc_vars, output_layers
 
 def conv(batch_input, out_channels, stride=2, size_kernel=4):
     with tf.variable_scope("conv"):
@@ -631,7 +632,7 @@ def _generator_model_with_pool(sess, features, labels, channels, layer_output_sk
 
     return model.get_output(), gene_vars, output_layers
 
-def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer_output_skip=5,
+def _generator_model_with_scale(features, labels, masks, channels=2, layer_output_skip=5,
                                 num_dc_layers=1):
     # Upside-down all-convolutional resnet
 
@@ -639,8 +640,8 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
 
     #image_size = tf.shape(features)
     mapsize = 3
-    res_units  = [64, 64, 64]#[256, 128, 96]
-    scale_changes = [0,0,0]
+    res_units  = [64, 64, 64, 64, 64]#[256, 128, 96]
+    scale_changes = [0,0,0,0,0]
     print('use resnet without pooling:', res_units)
     old_vars = tf.global_variables()#tf.all_variables() , all_variables() are deprecated
 
@@ -648,9 +649,9 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
     model = Model('GEN', features)
 
     # loop different levels
-    for ru in range(len(res_units)-1):
+    for ru in range(len(res_units)):
         nunits  = res_units[ru]
-        model.add_residual_block_strict(nunits, mapsize=mapsize)
+        model.add_residual_block(nunits, mapsize=mapsize)
 
         # Spatial upscale (see http://distill.pub/2016/deconv-checkerboard/)
         # and transposed convolution
@@ -679,8 +680,8 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
         mix_DC = 0.7 #0.95 #1
 
         # sampled kspace
-        first_layer = features
-        feature_kspace = Fourier(first_layer, separate_complex=True)        
+        first_layer = labels
+        feature_kspace = Fourier(first_layer, separate_complex=False)        
         #mask_kspace = tf.cast(masks, dtype=tf.float32) #tf.greater(tf.abs(feature_kspace),threshold_zero)  
 
         #print('sampling_rate', sess.run(tf.reduce_sum(tf.abs(mask_kspace)) / tf.size(mask_kspace)))
@@ -745,9 +746,9 @@ def _generator_model_with_scale(sess, features, labels, masks, channels=2, layer
     # select subset of layers
     output_layers = [model.outputs[0]] + model.outputs[1:-1][::layer_output_skip] + [model.outputs[-1]]
 
-    return model.get_output(), gene_vars, output_layers
+    return model, gene_vars, output_layers
 
-def create_model(sess, features, labels, masks):
+def create_model(features, labels, masks):
     # sess: TF sesson
     # features: input, for SR/CS it is the input image
     # labels: output, for SR/CS it is the groundtruth image
@@ -760,94 +761,26 @@ def create_model(sess, features, labels, masks):
     #print('channels', features.get_shape())
 
     # TBD: Is there a better way to instance the generator?
-   
-    function_generator = lambda x,y,z,m,w: _generator_model_with_scale(x,y,z,m,w,
-                                                num_dc_layers=1, layer_output_skip=7)
+    tmp = tf.identity(features)
+    gene_model, gene_vars, gene_layers = _generator_model_with_scale(tmp, labels, masks)
+    for i in range(15):
+        tmp = gene_model.get_output()
 
-
-
-    with tf.variable_scope('gene') as scope:
-
-        gene_output_1, gene_var_list, gene_layers_1 = function_generator(sess, features, labels, masks, 2)                      
-        scope.reuse_variables()
-
-        gene_output_2, _ , gene_layers_2 = function_generator(sess, gene_output_1, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_3, _ , gene_layers_3 = function_generator(sess, gene_output_2, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_4, _ , gene_layers_4 = function_generator(sess, gene_output_3, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_5, _ , gene_layers_5 = function_generator(sess, gene_output_4, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_6, _ , gene_layers_6 = function_generator(sess, gene_output_5, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_7, _ , gene_layers_7 = function_generator(sess, gene_output_6, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_8, _ , gene_layers_8 = function_generator(sess, gene_output_7, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_9, _ , gene_layers_9 = function_generator(sess, gene_output_8, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_10, _ , gene_layers_10 = function_generator(sess, gene_output_9, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_11, _ , gene_layers_11 = function_generator(sess, gene_output_10, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_12, _ , gene_layers_12 = function_generator(sess, gene_output_11, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_13, _ , gene_layers_13 = function_generator(sess, gene_output_12, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_14, _ , gene_layers_14 = function_generator(sess, gene_output_13, labels, masks, 2)
-        scope.reuse_variables()
-
-        gene_output_15, _ , gene_layers_15 = function_generator(sess, gene_output_14, labels, masks, 2)
-        scope.reuse_variables()
-
-        #gene_output_16, _ , gene_layers_16 = function_generator(sess, gene_output_15, labels, masks, 1)
-        #scope.reuse_variables()
-
-        #gene_output_17, _ , gene_layers_17 = function_generator(sess, gene_output_16, labels, masks, 1)
-        #scope.reuse_variables()
-
-        #gene_output_18, _ , gene_layers_18 = function_generator(sess, gene_output_17, labels, masks, 1)
-        #scope.reuse_variables()
-
-        #gene_output_19, _ , gene_layers_19 = function_generator(sess, gene_output_18, labels, masks, 1)
-        #scope.reuse_variables()
-
-        #gene_output_20, _ , gene_layers_20 = function_generator(sess, gene_output_19, labels, masks, 1)
-        #scope.reuse_variables()
-
-
-        gene_output_real = gene_output_15
-        gene_output_complex = tf.complex(gene_output_real[:,:,:,0], gene_output_real[:,:,:,1])
-        gene_output = tf.abs(gene_output_complex)
-        #print('gene_output_train', gene_output.get_shape()) 
-        gene_output = tf.reshape(gene_output, [batch_size, rows, cols, 1])
-        gene_layers = gene_layers_15               
+    gene_output_real = tmp
+    gene_output_complex = tf.complex(gene_output_real[:,:,:,0], gene_output_real[:,:,:,1])
+    gene_output = tf.abs(gene_output_complex)
+    #print('gene_output_train', gene_output.get_shape()) 
+    gene_output = tf.reshape(gene_output, [batch_size, rows, cols, 1])               
 
     # Discriminator with real data
-    disc_real_input = tf.identity(labels, name='disc_real_input')
-
-    # TBD: Is there a better way to instance the discriminator?
-    with tf.variable_scope('disc') as scope:
+    disc_input = tf.identity(labels)
     
-        #print('hybrid_disc', FLAGS.hybrid_disc)
-        disc_real_output, disc_var_list, disc_layers = \
-                _discriminator_model(sess, disc_real_input)
+    disc_model, disc_vars, disc_layers = _discriminator_model(disc_input)
+    disc_real_output = disc_model.get_output()
 
-        scope.reuse_variables()
-        disc_fake_output, _, _ = _discriminator_model(sess, gene_output)
+    disc_input = tf.identity(gene_output)
+    disc_fake_output = disc_model.get_output()
+    # TBD: Is there a better way to instance the discriminator?
 
     
         #test
@@ -999,7 +932,7 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
                            gene_dc_factor * gene_dc_loss, name='gene_nonmse_l2')
     
     
-    gene_mse_factor  = tf.placeholder(dtype=tf.float32, name='gene_mse_factor')
+    #gene_mse_factor  = tf.placeholder(dtype=tf.float32, name='gene_mse_factor')
 
 
     #total loss = fool-loss + data consistency loss + mse forward-passing loss
@@ -1007,8 +940,8 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
                             #FLAGS.gene_mse_factor * gene_mixmse_loss, name='gene_loss')
     
     #gene_mse_factor as a parameter
-    gene_loss     = tf.add((1.0 - 0.4) * gene_non_mse_l2,
-                                  0.4 * gene_mixmse_loss, name='gene_loss')
+    gene_loss     = tf.add((1.0 - gene_mse_factor) * gene_non_mse_l2,
+                                  gene_mse_factor * gene_mixmse_loss, name='gene_loss')
 
 
 
