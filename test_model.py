@@ -900,7 +900,7 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  gene_o
     feature_mask = masks 
     dc_loss_list = []
     for i in range(30):
-        gene_kspace = Fourier(gene_output_list[i] separate_complex=True)
+        gene_kspace = Fourier(gene_output_list[i], separate_complex=True)
         loss_kspace = tf.cast(tf.abs(tf.square(gene_kspace - feature_kspace)),tf.float32)*tf.cast(feature_mask,tf.float32)
         dc_loss  = tf.reduce_mean(loss_kspace)
         dc_loss_list.append(dc_loss)
