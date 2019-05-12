@@ -681,7 +681,7 @@ def _generator_model_with_scale(features, labels, masks, channels=2, layer_outpu
 
         # sampled kspace
         first_layer = features
-        feature_kspace = Fourier(first_layer, separate_complex=False)        
+        feature_kspace = Fourier(first_layer, separate_complex=True)        
         #mask_kspace = tf.cast(masks, dtype=tf.float32) #tf.greater(tf.abs(feature_kspace),threshold_zero)  
 
         #print('sampling_rate', sess.run(tf.reduce_sum(tf.abs(mask_kspace)) / tf.size(mask_kspace)))
