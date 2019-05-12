@@ -680,7 +680,7 @@ def _generator_model_with_scale(features, labels, masks, channels=2, layer_outpu
         mix_DC = 0.7 #0.95 #1
 
         # sampled kspace
-        first_layer = labels
+        first_layer = features
         feature_kspace = Fourier(first_layer, separate_complex=False)        
         #mask_kspace = tf.cast(masks, dtype=tf.float32) #tf.greater(tf.abs(feature_kspace),threshold_zero)  
 
