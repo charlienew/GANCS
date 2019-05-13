@@ -712,8 +712,8 @@ def _generator_model_with_scale(features, labels, masks, channels=2, layer_outpu
             #print('corrected_complex', corrected_complex.get_shape())
  
             #get real and imaginary parts
-            corrected_real = tf.reshape(tf.real(corrected_complex), [batch_size, 28, 28, 1])
-            corrected_imag = tf.reshape(tf.imag(corrected_complex), [batch_size, 28, 28, 1])
+            corrected_real = tf.reshape(tf.real(corrected_complex), [batch_size, 256, 256, 1])
+            corrected_imag = tf.reshape(tf.imag(corrected_complex), [batch_size, 256, 256, 1])
            
             #print('size_corrected_real', corrected_real.get_shape())
 
