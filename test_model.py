@@ -4,7 +4,7 @@ import tensorflow as tf
 import math
 
 FLAGS = tf.app.flags.FLAGS
-batch_size = 100
+batch_size = 20
 gene_l1l2_factor = 0.5
 gene_ssim_factor = 0.2
 gene_log_factor = 0.5
