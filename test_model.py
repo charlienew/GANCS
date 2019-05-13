@@ -308,11 +308,12 @@ class Model:
     def add_mean(self):
         """Adds a layer that averages the inputs from the previous layer"""
 
-        prev_shape = self.get_output().get_shape()
-        reduction_indices = list(range(len(prev_shape)))
-        assert len(reduction_indices) > 2 and "Can't average a (batch, activation) tensor"
-        reduction_indices = reduction_indices[1:-1]
-        out = tf.reduce_mean(self.get_output(), reduction_indices=reduction_indices)
+        with tf.variable_scope(self._get_layer_str()):
+            prev_shape = self.get_output().get_shape()
+            reduction_indices = list(range(len(prev_shape)))
+            assert len(reduction_indices) > 2 and "Can't average a (batch, activation) tensor"
+            reduction_indices = reduction_indices[1:-1]
+            out = tf.reduce_mean(self.get_output(), reduction_indices=reduction_indices)
         
         self.outputs.append(out)
         return self
