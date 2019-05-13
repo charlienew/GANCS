@@ -745,7 +745,7 @@ def create_model(features, labels, masks):
 
     # TBD: Is there a better way to instance the generator?
    
-    function_generator = lambda x,y,z,m: _generator_model_with_scale(x,y,z,m,w,
+    function_generator = lambda x,y,z,m: _generator_model_with_scale(x,y,z,m,
                                                 num_dc_layers=1, layer_output_skip=7)
 
 
