@@ -296,11 +296,12 @@ class Model:
     def add_sum(self, term):
         """Adds a layer that sums the top layer with the given term"""
 
-        prev_shape = self.get_output().get_shape()
-        term_shape = term.get_shape()
-        #print("%s %s" % (prev_shape, term_shape))
-        assert prev_shape == term_shape and "Can't sum terms with a different size"
-        out = tf.add(self.get_output(), term)
+        with tf.variable_scope(self._get_layer_str()):
+            prev_shape = self.get_output().get_shape()
+            term_shape = term.get_shape()
+            #print("%s %s" % (prev_shape, term_shape))
+            assert prev_shape == term_shape and "Can't sum terms with a different size"
+            out = tf.add(self.get_output(), term)
         
         self.outputs.append(out)
         return self
