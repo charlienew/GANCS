@@ -188,7 +188,7 @@ class Model:
             weight = tf.get_variable('weight', initializer=initw)
             weight = tf.transpose(weight, perm=[0, 1, 3, 2])
             prev_output = self.get_output()
-            output_shape = [FLAGS.batch_size,
+            output_shape = [batch_size,
                             int(prev_output.get_shape()[1]) * stride,
                             int(prev_output.get_shape()[2]) * stride,
                             num_units]
@@ -698,6 +698,7 @@ def _generator_model_with_scale(features, labels, masks, channels, layer_output_
             #print('size_corrected_real', corrected_real.get_shape())
 
             corrected_real_concat = tf.concat([corrected_real, corrected_imag], axis=3)
+            corrected_real_concat = tf.cast(corrected_real_concat, tf.float32)
 
             #print('corrected_concat', corrected_real_concat.get_shape())
             #print('channels', channels)
