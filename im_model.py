@@ -352,7 +352,7 @@ def _discriminator_model(features, layer_output_skip=5, hybrid_disc=0):
 
     # Fully convolutional model
     mapsize = 5
-    layers  = [8, 16, 32, 64]#[64, 128, 256, 512]
+    layers  = [64, 32, 16, 8]#[64, 128, 256, 512]
 
     old_vars = tf.global_variables()#tf.all_variables() , all_variables() are deprecated
 
@@ -657,7 +657,7 @@ def _generator_model_with_scale(features, labels, masks, channels, layer_output_
     if num_dc_layers >= 0:
         # parameters
         threshold_zero = 1./255.
-        mix_DC = 0.7 #0.95
+        mix_DC = 0.8 #0.95
 
         # sampled kspace
         first_layer = labels
@@ -684,7 +684,7 @@ def _generator_model_with_scale(features, labels, masks, channels, layer_output_
 
             # inverse fft
             corrected_complex = tf.ifft2d(corrected_kspace)
-            image_size = tf.shape(corrected_complex)
+            #image_size = tf.shape(corrected_complex)
        
             ## get abs
             #corrected_mag = tf.cast(tf.abs(corrected_complex), tf.float32)
