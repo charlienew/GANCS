@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import math
 
-batch_size = 20
+batch_size = 5
 gene_l1l2_factor = 0.5
 gene_ssim_factor = 0.2
 gene_log_factor = 0.5
@@ -351,7 +351,7 @@ def _discriminator_model(features, layer_output_skip=5, hybrid_disc=0):
     # to study the kspace distribution/smoothness properties
 
     # Fully convolutional model
-    mapsize = 3
+    mapsize = 5
     layers  = [8, 16, 32, 64]#[64, 128, 256, 512]
 
     old_vars = tf.global_variables()#tf.all_variables() , all_variables() are deprecated
@@ -616,8 +616,8 @@ def _generator_model_with_scale(features, labels, masks, channels, layer_output_
     channels = 2
 
     #image_size = tf.shape(features)
-    mapsize = 3
-    res_units  = [128, 128, 64, 64, 16] #[64, 32, 16]#[256, 128, 96]
+    mapsize = 5
+    res_units  = [64, 64, 64, 32, 16] #[64, 32, 16]#[256, 128, 96]
     scale_changes = [0,0,0,0,0]
     print('use resnet without pooling:', res_units)
     old_vars = tf.global_variables()#tf.all_variables() , all_variables() are deprecated
