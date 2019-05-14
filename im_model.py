@@ -987,7 +987,7 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
 
 
     #list of loss
-    list_gene_lose = [gene_mixmse_loss, gene_mse_loss, gene_l2_loss, gene_l1_loss, gene_ssim_loss, # regression loss
+    list_gene_lose = [gene_mixmse_loss, gene_mse_loss, gene_l2_loss, gene_l1_loss, # regression loss
                         gene_dc_loss, gene_fool_loss, gene_non_mse_l2, gene_loss]
 
     return gene_loss, gene_dc_loss, gene_fool_loss, list_gene_lose, gene_mse_factor
