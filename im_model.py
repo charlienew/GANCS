@@ -782,35 +782,35 @@ def create_model(features, labels, masks):
         gene_output_10, _ , gene_layers_10 = function_generator(gene_output_9, features, masks, 2)
         scope.reuse_variables()
 
-        gene_output_11, _ , gene_layers_11 = function_generator(gene_output_10, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_11, _ , gene_layers_11 = function_generator(gene_output_10, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_12, _ , gene_layers_12 = function_generator(gene_output_11, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_12, _ , gene_layers_12 = function_generator(gene_output_11, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_13, _ , gene_layers_13 = function_generator(gene_output_12, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_13, _ , gene_layers_13 = function_generator(gene_output_12, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_14, _ , gene_layers_14 = function_generator(gene_output_13, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_14, _ , gene_layers_14 = function_generator(gene_output_13, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_15, _ , gene_layers_15 = function_generator(gene_output_14, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_15, _ , gene_layers_15 = function_generator(gene_output_14, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_16, _ , gene_layers_16 = function_generator(gene_output_15, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_16, _ , gene_layers_16 = function_generator(gene_output_15, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_17, _ , gene_layers_17 = function_generator(gene_output_16, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_17, _ , gene_layers_17 = function_generator(gene_output_16, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_18, _ , gene_layers_18 = function_generator(gene_output_17, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_18, _ , gene_layers_18 = function_generator(gene_output_17, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_19, _ , gene_layers_19 = function_generator(gene_output_18, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_19, _ , gene_layers_19 = function_generator(gene_output_18, features, masks, 2)
+        #scope.reuse_variables()
 
-        gene_output_20, _ , gene_layers_20 = function_generator(gene_output_19, features, masks, 2)
-        scope.reuse_variables()
+        #gene_output_20, _ , gene_layers_20 = function_generator(gene_output_19, features, masks, 2)
+        #scope.reuse_variables()
 
 
         gene_output_real = gene_output_10
