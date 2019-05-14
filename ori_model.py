@@ -352,7 +352,7 @@ def _discriminator_model(features, layer_output_skip=5, hybrid_disc=0):
 
     # Fully convolutional model
     mapsize = 3
-    layers  = [8, 16, 32, 64]#[64, 128, 256, 512]
+    layers  = [8, 16, 32]#[64, 128, 256, 512]
 
     old_vars = tf.global_variables()#tf.all_variables() , all_variables() are deprecated
 
@@ -370,6 +370,7 @@ def _discriminator_model(features, layer_output_skip=5, hybrid_disc=0):
         model.add_batch_norm()
         model.add_relu()
 
+    stddev_factor = 2.0
     # Finalization a la "all convolutional net"
     model.add_conv2d(nunits, mapsize=mapsize, stride=1, stddev_factor=stddev_factor)
     model.add_batch_norm()
@@ -609,7 +610,7 @@ def _generator_model_with_pool(sess, features, labels, channels, layer_output_sk
     return model.get_output(), gene_vars, output_layers
 
 def _generator_model_with_scale(features, labels, masks, channels, layer_output_skip=5,
-                                num_dc_layers=0):
+                                num_dc_layers=1):
     # Upside-down all-convolutional resnet
 
     channels = 2
@@ -635,9 +636,6 @@ def _generator_model_with_scale(features, labels, masks, channels, layer_output_
         # and transposed convolution
         if scale_changes[ru]>0:
             model.add_upscale()
-
-        model.add_batch_norm()
-        model.add_relu()
         #model.add_conv2d_transpose(nunits, mapsize=mapsize, stride=1, stddev_factor=1.)
 
 
@@ -814,12 +812,12 @@ def create_model(features, labels, masks):
         scope.reuse_variables()
 
 
-        gene_output_real = gene_output_20
+        gene_output_real = gene_output_5
         gene_output_complex = tf.complex(gene_output_real[:,:,:,0], gene_output_real[:,:,:,1])
         gene_output = tf.abs(gene_output_complex)
         #print('gene_output_train', gene_output.get_shape()) 
         gene_output = tf.reshape(gene_output, [batch_size, rows, cols, 1])
-        gene_layers = gene_layers_20
+        gene_layers = gene_layers_5
                     
 
     # Discriminator with real data
