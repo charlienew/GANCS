@@ -5,7 +5,7 @@ import math
 
 batch_size = 5
 gene_l1l2_factor = 0.5
-gene_ssim_factor = 0.2
+gene_ssim_factor = 0.5
 gene_log_factor = 0.5
 gene_dc_factor = 0.3
 gene_mse_factor = 0.5
@@ -962,8 +962,9 @@ def create_generator_loss(disc_output, gene_output, gene_output_complex,  featur
                         (1.0 - gene_l1l2_factor) * gene_l2_loss, name='gene_mse_loss')
 
     #ssim loss
-    #gene_ssim_loss = loss_DSSIS_tf11(labels, gene_output)
-    gene_mixmse_loss = tf.identity(gene_mse_loss)
+    gene_ssim_loss = loss_DSSIS_tf11(labels, gene_output)
+    gene_mixmse_loss = tf.add(gene_ssim_factor * gene_ssim_loss, 
+                            (1.0 - gene_ssim_factor) * gene_mse_loss, name='gene_mixmse_loss')
     
     # generator fool descriminator loss: gan LS or log loss
     gene_fool_loss = tf.add((1.0 - gene_log_factor) * gene_ls_loss,
